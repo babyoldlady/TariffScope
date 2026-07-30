@@ -1,1 +1,19 @@
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tariffscope-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tariffscope-api
+  template:
+    metadata:
+      labels:
+        app: tariffscope-api
+    spec:
+      containers:
+        - name: api
+          image: tariffscope-api:latest
+          ports:
+            - containerPort: 8000
