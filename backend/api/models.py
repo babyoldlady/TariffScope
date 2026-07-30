@@ -1,30 +1,65 @@
-from sqlalchemy import Column, String, Boolean, Text, DateTime
-from sqlalchemy.orm import declarative_base
-from datetime import datetime
+from datetime import datetime, timezone
+import uuid
 
-Base = declarative_base()
+from sqlalchemy import Boolean, DateTime, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
 
 class TariffRecord(Base):
     __tablename__ = "tariff_records"
 
-    tariff_id = Column(String, primary_key=True, index=True)
-    issuer = Column(String, index=True)
-    tariff_no = Column(String, index=True)
-    tariff_type = Column(String, index=True)
-    product_type = Column(String, index=True)
-    origin = Column(String, index=True)
-    destination = Column(String, index=True)
-    regulator = Column(String, index=True)
-    status = Column(String, index=True)
-    effective_yes_no = Column(Boolean, default=False)
-    effective_date = Column(String, nullable=True)
-    filed_date = Column(String, nullable=True)
-    rate_text = Column(Text, nullable=True)
-    rules_text = Column(Text, nullable=True)
-    tariff_index_text = Column(Text, nullable=True)
-    company_contact_name = Column(String, nullable=True)
-    company_contact_email = Column(String, nullable=True)
-    company_contact_phone = Column(String, nullable=True)
-    source_url = Column(String, nullable=True)
-    source_system = Column(String, nullable=True)
-    last_updated_at = Column(DateTime, default=datetime.utcnow)
+    tariff_id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    issuer: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    tariff_no: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    tariff_type: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    product_type: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    origin: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    destination: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    regulator: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    status: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
+    effective_yes_no: Mapped[bool] = mapped_column(Boolean, default=False)
+    effective_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    filed_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    rate_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rules_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tariff_index_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    company_contact_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    company_contact_email: Mapped[str | None] = mapped_column(String, nullable=True)
+    company_contact_phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    source_system: Mapped[str | None] = mapped_column(String, nullable=True)
+    last_updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    subscription_id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    issuer: Mapped[str] = mapped_column(String, index=True)
+    email: Mapped[str | None] = mapped_column(String, nullable=True)
+    tariff_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    product_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    state: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class TariffVersion(Base):
+    __tablename__ = "tariff_versions"
+
+    version_id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    tariff_id: Mapped[str] = mapped_column(String, index=True)
+    payload_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+    )
