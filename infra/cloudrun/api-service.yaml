@@ -1,1 +1,12 @@
-
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: tariffscope-api
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/YOUR_PROJECT_ID/tariffscope-api:latest
+          env:
+            - name: ENV
+              value: production
