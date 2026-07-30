@@ -1,12 +1,38 @@
-from fastapi import FastAPI
-from backend.api.routers import tariffs, operators, subscriptions
+from backend.api.db import SessionLocal, engine
+from backend.api.models import Base, TariffRecord
+from backend.ingestion.ferc_client import fetch_ferc_tariffs
+from backend.ingestion.normalize import normalize_tariff
 
-app = FastAPI(title="TariffScope API", version="0.1.0")
 
-app.include_router(tariffs.router, prefix="/tariffs", tags=["tariffs"])
-app.include_router(operators.router, prefix="/operators", tags=["operators"])
-app.include_router(subscriptions.router, prefix="/subscriptions", tags=["subscriptions"])
+def init_db():
+    Base.metadata.create_all(bind=engine)
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+
+def ingest_tariffs(session, rows):
+    count = 0
+    for row in rows:
+        item = normalize_tariff(row)
+
+        existing = session.query(TariffRecord).filter_by(tariff_id=item["tariff_id"]).first()
+        if existing:
+            for key, value in item.items():
+                setattr(existing, key, value)
+        else:
+            session.add(TariffRecord(**item))
+
+        count += 1
+
+    session.commit()
+    return count
+
+
+def main():
+    init_db()
+    rows = fetch_ferc_tariffs()
+    with SessionLocal() as session:
+        loaded = ingest_tariffs(session, rows)
+    print(f"Ingested {loaded} tariff records")
+
+
+if __name__ == "__main__":
+    main()
